@@ -6,12 +6,13 @@ import android.os.Bundle
 import android.widget.TextView
 import com.example.automacorp.service.RoomService
 
-class RoomActivity : AppCompatActivity() {
+class RoomActivity : BasicActivity() {
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_room)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         val roomId = intent.getLongExtra(MainActivity.ROOM_ID_PARAM, 0)
         val room = RoomService.ROOMS.firstOrNull {it.id == roomId}

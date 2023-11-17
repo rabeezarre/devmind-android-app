@@ -6,7 +6,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.EditText
 import android.widget.Toast
-class MainActivity : AppCompatActivity() {
+class MainActivity : BasicActivity() {
 
     companion object {
         const val WINDOW_NAME_PARAM = "com.automacorp.windowname.attribute"
