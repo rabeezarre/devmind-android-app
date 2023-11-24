@@ -22,7 +22,7 @@
         <activity
             android:name=".RoomActivity"
             android:exported="false"
-            android:parentActivityName=".MainActivity"/>
+            android:parentActivityName=".RoomsActivity"/>
         <activity
             android:name=".WindowActivity"
             android:exported="false"
