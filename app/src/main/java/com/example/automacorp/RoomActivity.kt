@@ -3,8 +3,16 @@ package com.example.automacorp
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
-import android.widget.TextView
-import com.example.automacorp.service.RoomService
+import android.widget.EditText
+import android.widget.Toast
+import androidx.lifecycle.lifecycleScope
+import com.example.automacorp.model.RoomCommandDto
+import com.example.automacorp.model.RoomDto
+import com.example.automacorp.service.ApiServices
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class RoomActivity : BasicActivity(), OnRoomClickListener {
 
@@ -15,19 +23,77 @@ class RoomActivity : BasicActivity(), OnRoomClickListener {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         val roomId = intent.getLongExtra(MainActivity.ROOM_ID_PARAM, 0)
-        val room = RoomService.ROOMS.firstOrNull {it.id == roomId}
 
-        val roomName = findViewById<TextView>(R.id.txt_room_name)
-        roomName.text = room?.name ?: ""
-
-        val roomCurrentTemperature = findViewById<TextView>(R.id.txt_current_temperature)
-        roomCurrentTemperature.text = room?.currentTemperature?.toString() ?: ""
-
-        val roomTargetTemperature = findViewById<TextView>(R.id.txt_target_temperature)
-        roomTargetTemperature.text = room?.targetTemperature?.toString() ?: ""
+        lifecycleScope.launch(context = Dispatchers.IO) { // (1)
+            runCatching { ApiServices.roomsApiService.findById(roomId).execute() }
+                .onSuccess {
+                    withContext(context = Dispatchers.Main) { // (2)
+                        populateScreen(it.body())
+                    }
+                }
+                .onFailure {
+                    withContext(context = Dispatchers.Main) {
+                        it.printStackTrace()
+                        Toast.makeText(applicationContext, "Error on rooms list loading $it", Toast.LENGTH_LONG)
+                            .show()
+                    }
+                }
+        }
     }
+
+    private fun populateScreen(room: RoomDto?) {
+        val roomName = findViewById<EditText>(R.id.txt_room_name)
+        roomName.setText(room?.name ?: "")
+
+        val roomCurrentTemperature = findViewById<EditText>(R.id.txt_current_temperature)
+        roomCurrentTemperature.setText(room?.currentTemperature?.toString() ?: "")
+
+        val roomTargetTemperature = findViewById<EditText>(R.id.txt_target_temperature)
+        roomTargetTemperature.setText(room?.targetTemperature?.toString() ?: "")
+
+        findViewById<FloatingActionButton>(R.id.saveButton).setOnClickListener {
+            saveRoom()
+        }
+    }
+
     override fun selectRoom(id: Long) {
         val intent = Intent(this, RoomActivity::class.java).putExtra(MainActivity.ROOM_ID_PARAM, id)
         startActivity(intent)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        findViewById<FloatingActionButton>(R.id.saveButton).setOnClickListener(null)
+    }
+
+    fun saveRoom() {
+        val roomId = intent.getLongExtra(MainActivity.ROOM_ID_PARAM, -1)
+        val roomDto = RoomCommandDto(
+            name = findViewById<EditText>(R.id.txt_room_name).text.toString(),
+            currentTemperature = findViewById<EditText>(R.id.txt_current_temperature).text.toString()
+                .toDoubleOrNull(),
+            targetTemperature = findViewById<EditText>(R.id.txt_target_temperature).text.toString()
+                .toDoubleOrNull()
+        )
+        lifecycleScope.launch(context = Dispatchers.IO) { // (1)
+            runCatching {
+                if (roomId == null || roomId == 0L) {
+                    ApiServices.roomsApiService.save(roomDto).execute()
+                } else {
+                    ApiServices.roomsApiService.updateRoom(roomId, roomDto).execute()
+                }
+            }
+                .onSuccess {
+                    withContext(context = Dispatchers.Main) {
+                        startActivity(Intent(applicationContext, RoomsActivity::class.java))
+                    }
+                }
+                .onFailure {
+                    withContext(context = Dispatchers.Main) {
+                        it.printStackTrace()
+                        Toast.makeText(applicationContext, "Error on room saving $it", Toast.LENGTH_LONG).show()  // (3)
+                    }
+                }
+        }
     }
 }

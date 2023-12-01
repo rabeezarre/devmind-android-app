@@ -16,4 +16,11 @@
     <string name="menu_rooms">Building rooms</string>
     <string name="menu_website">Our website</string>
     <string name="menu_email">Send us an email</string>
+
+    <string name="room_name">Room name</string>
+    <string name="room_current_temperature">Current temperature</string>
+    <string name="room_target_temperature">Target temperature</string>
+    <string name="room_save_action">Save room</string>
+
+    <string name="window_name">Window name</string>
 </resources>
