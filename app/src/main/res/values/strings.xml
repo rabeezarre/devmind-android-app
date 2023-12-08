@@ -7,7 +7,7 @@
     <string name="act_main_open_window">Open window</string>
     <string name="act_main_open_room">Open room</string>
 
-    <string name="act_light_main">Light name</string>
+    <string name="act_window_main">Window name</string>
 
     <string name="act_room_name">Room name</string>
     <string name="act_room_current_temperature">Current temperature</string>
